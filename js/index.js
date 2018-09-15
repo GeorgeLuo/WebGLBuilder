@@ -44,8 +44,10 @@ function flashShape(index) {
 
 function render() {
 
-  rotateSpikes();
-  flashShape(1);
+  if(isPlaying) {
+    rotateSpikes();
+    flashShape(flashIndex);
+  }
 
   // shape.rotation.x += 0.01;
   // shape.rotation.y += 0.01;        // camera.lookAt( cameraTarget );
@@ -84,6 +86,36 @@ function onDocumentMouseOut( event ) {
   document.removeEventListener( 'mouseout', onDocumentMouseOut, false );
 }
 
+let flashIndex = 0;
+let isPlaying = false;
+
+["click"].forEach((eventName)=>{
+  window.addEventListener(eventName, ()=>{
+    flashIndex = getRandomInt(3);
+    if(!isPlaying){
+      
+        playMp3()
+        isPlaying = true;
+      
+    }
+  }); 
+});
+
+function playMp3() {
+  soundManager.onready(function() {
+    soundManager.createSound({
+        id: 'mySound',
+        url: 'sounds/x-2.wav'
+    });
+
+    // ...and play it
+    try{
+      soundManager.play('mySound');
+    } catch (e) {
+      isPlaying = false;
+    }
+  });
+}
 
 function init() {
 
