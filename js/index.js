@@ -42,11 +42,24 @@ function flashShape(index) {
   }
 }
 
+var resized = false;
+function resizeShape(index) {
+  if(!resized) {
+    spikes[index].scale.set(1.02,1.02,1.02);
+    resized = true;
+  } else {
+    spikes[index].scale.set(0.98,0.98,0.98);
+    resizeIndex = getRandomInt(3);
+    resized = false;
+  }
+}
+
 function render() {
 
   if(isPlaying) {
     rotateSpikes();
     flashShape(flashIndex);
+    resizeShape(resizeIndex);
   }
 
   // shape.rotation.x += 0.01;
@@ -87,6 +100,7 @@ function onDocumentMouseOut( event ) {
 }
 
 let flashIndex = 0;
+let resizeIndex = 0;
 let isPlaying = false;
 
 ["click"].forEach((eventName)=>{
@@ -105,7 +119,7 @@ function playMp3() {
   soundManager.onready(function() {
     soundManager.createSound({
         id: 'mySound',
-        url: 'sounds/x-2.wav'
+        url: 'sounds/x-4.wav'
     });
 
     // ...and play it
