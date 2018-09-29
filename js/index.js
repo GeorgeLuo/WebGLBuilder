@@ -7,7 +7,7 @@ let scene,
 let camera,
     fov, aspect, near, far;
 
-var spikes
+var spikes, planeImage, circleImage, circles
 
 var windowHalfX = window.innerWidth / 2;
 var windowHalfY = window.innerHeight / 2;
@@ -22,6 +22,11 @@ var targetRotationV = 0;
 var targetRotationOnMouseDownV = 0;
 var mouseY = 0;
 var mouseYOnMouseDown = 0;
+
+function rotateCircles() {
+  // circles.rotation.x += 0.01;
+  circles.rotation.z += 0.01;
+}
 
 function rotateSpikes() {
   for (i = 0; i < spikes.length; i++) { 
@@ -60,6 +65,7 @@ function render() {
     rotateSpikes();
     flashShape(flashIndex);
     resizeShape(resizeIndex);
+    rotateCircles();
   }
 
   // shape.rotation.x += 0.01;
@@ -115,11 +121,18 @@ let isPlaying = false;
   }); 
 });
 
+urls = ['sounds/x-8.wav', 'sounds/x-7.wav']
+
 function playMp3() {
   soundManager.onready(function() {
     soundManager.createSound({
         id: 'mySound',
-        url: 'sounds/x-4.wav'
+        onfinish: function() {
+           urls.shift();
+           clearScene();
+           renderNextScene();
+         },
+        url: urls[0]
     });
 
     // ...and play it
@@ -133,24 +146,18 @@ function playMp3() {
 
 function init() {
 
-  width = window.innerWidth;
-  height = window.innerHeight;
-  
-  fov = 50;
-  aspect = width / height;
-  near = 1;
-  far = 2000;
-  
+  setSceneConstants();
+
   scene = new THREE.Scene();
-  for (i = 0; i < spikes.length; i++) { 
-    scene.add(spikes[i]);
-  }
+
+  // for (i = 0; i < spikes.length; i++) { 
+  //   scene.add(spikes[i]);
+  // }
+
+  // createPlaneImage()
+  // scene.add(planeImage);
   
-  camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
-  camera.position.x = 300;
-  camera.position.z = 300;
-  camera.position.y = 200;
-  camera.lookAt(new THREE.Vector3(0,0,0));
+  initCamera();
     
   renderer = new THREE.WebGLRenderer({
     antialias: true,
@@ -162,6 +169,25 @@ function init() {
   container.appendChild(renderer.domElement);
 
   document.addEventListener( 'mousedown', onDocumentMouseDown, false );
+}
+
+function setSceneConstants() {
+
+  width = window.innerWidth;
+  height = window.innerHeight;
+
+  fov = 50;
+  aspect = width / height;
+  near = 1;
+  far = 2000;
+}
+
+function initCamera() {
+  camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
+  camera.position.x = 0;
+  camera.position.z = 500;
+  camera.position.y = 0;
+  camera.lookAt(new THREE.Vector3(0,0,0));
 }
 
 
@@ -199,6 +225,39 @@ function createFloor() {
   // scene.add( plane );
 }
 
+function createCircleGeometry(image_path) {
+
+  console.log("creating circle geometry");
+
+  var texture = new THREE.TextureLoader().load( image_path );
+  var material = new THREE.MeshBasicMaterial( { map: texture } );
+// thetaStart: 0,
+//       thetaLength: twoPi
+  var geometry = new THREE.CircleGeometry( 200, 64, 0, Math.PI * 2 );
+  circleImage = geometry;
+  circle = new THREE.Mesh( geometry, material );
+
+
+  
+  return circle;
+}
+
+function createPlaneImage() {
+  var planeGeometry = new THREE.PlaneGeometry(350, 350, 1, 1);
+  var texture = new THREE.TextureLoader().load( 'images/plate_trans.png' );
+  var planeMaterial = new THREE.MeshLambertMaterial( { map: texture, transparent: true } );
+  //var planeMaterial = new THREE.MeshLambertMaterial({color: 0xffffff});
+  var plane = new THREE.Mesh(planeGeometry, planeMaterial);
+  plane.receiveShadow = true;
+  // rotate and position the plane
+  // plane.rotation.x = -0.5 * Math.PI;
+  // plane.rotation.z = -1.0 * Math.PI;
+  plane.position.set(0,0,0);
+  // add the plane to the scene
+  planeImage = plane;
+  return planeImage;
+}
+
 function lighting() {
   const light = new THREE.DirectionalLight( 0xffffff, 1);
   light.position.set( -100, 500, 400 );
@@ -224,10 +283,76 @@ function animate() {
   render();
 }
 
+function clearScene() {
+  while(scene.children.length > 0){ 
+    scene.remove(scene.children[0]); 
+  }
+}
+
+// scene is array of objects to load to scene
+// ex. scene_objects = 
+//  [createShape(0, 0, 0), createShape(200, 0, -200), createShape(-200, 0, 200)];
+// use strategy: call once to load environment, call again to load objects.
+function loadObjects(scene_objects) {
+  for (i = 0; i < scene_objects.length; i++) { 
+    scene.add(scene_objects[i]);
+  }
+}
+
+function createPlatesScene() {
+  // planeImage = [createPlaneImage("images/plate_trans.png")];
+  // loadObjects(planeImage);
+
+  circles = new THREE.Group();
+  circles.add(createCircleGeometry("images/plate_trans.png"));
+
+  loadObjects([circles]);
+
+  const light = new THREE.DirectionalLight( 0xffffff, 1);
+  light.position.set( -100, 500, 400 );
+  light.castShadow = true;
+  
+  const d = 200;
+  light.shadowCameraLeft = -d;
+  light.shadowCameraRight = d;
+  light.shadowCameraTop = d;
+  light.shadowCameraBottom = -d;
+  
+  light.shadowCameraFar = 1000;
+
+
+  loadObjects([light, new THREE.HemisphereLight( 0xffffbb, 0x080820, 0.6 ), new THREE.AmbientLight(0xa59f75, 0.6)]);
+}
+
+function createSpikesScene() {
+  spikes = [createShape(0, 0, 0), createShape(200, 0, -200), createShape(-200, 0, 200)]
+  loadObjects(spikes);
+
+  const light = new THREE.DirectionalLight( 0xffffff, 1);
+  light.position.set( -100, 500, 400 );
+  light.castShadow = true;
+  
+  const d = 200;
+  light.shadowCameraLeft = -d;
+  light.shadowCameraRight = d;
+  light.shadowCameraTop = d;
+  light.shadowCameraBottom = -d;
+  
+  light.shadowCameraFar = 1000;
+
+  loadObjects([light, new THREE.HemisphereLight( 0xffffbb, 0x080820, 0.6 ), new THREE.AmbientLight(0xa59f75, 0.6)]);
+}
+
 spikes = [createShape(0, 0, 0), createShape(200, 0, -200), createShape(-200, 0, 200)];
 
 init();
 lighting();
 createFloor();
+
+clearScene();
+createSpikesScene();
+
+clearScene();
+createPlatesScene();
 
 animate();
