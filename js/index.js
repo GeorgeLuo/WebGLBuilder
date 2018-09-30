@@ -240,6 +240,48 @@ function createCircleGeometry(image_path) {
   return circle;
 }
 
+function loadText(text_string) {
+
+  var loader = new THREE.FontLoader();
+  var mesh;
+
+  var text = new THREE.Group();
+
+  loader.load( 'fonts/helvetiker_regular.typeface.json', function ( font ) {
+
+
+
+    geometry = new THREE.TextGeometry( text_string, {
+      font: font,
+      size: 20,
+      height: 4,
+      curveSegments: 12,
+      bevelEnabled: true,
+      bevelThickness: 5,
+      bevelSize: 3,
+      bevelSegments: 5
+    } );
+
+    geometry.computeBoundingBox();
+    var centerOffset = -0.5 * ( geometry.boundingBox.max.x - geometry.boundingBox.min.x );
+    var textMaterial = new THREE.MeshPhongMaterial( { color: colors[getRandomInt(5)], specular: colors[getRandomInt(5)] } );
+
+    mesh = new THREE.Mesh( geometry, textMaterial );
+
+    mesh.position.x = 350;
+    mesh.position.y = 75;
+    mesh.position.z = 0;
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    mesh.geometry.center();
+    //mesh.lookAt(camera.position);
+    text.add(mesh);
+  } );
+
+  text.position.set(0, 0, 0);
+  return text;
+}
+
 function createPlaneImage(plane_img) {
   var planeGeometry = new THREE.PlaneGeometry(425, 425, 1, 1);
   var texture = new THREE.TextureLoader().load( plane_img );
@@ -307,6 +349,8 @@ function createPlatesScene() {
   loadObjects([circles]);
 
   loadObjects([createPlaneImage('images/plate_bg.jpg')]);
+
+  loadObjects([loadText('SITE\n UNDER\n CONSTRUCTION')]);
 
   const light = new THREE.DirectionalLight( 0xffffff, 1);
   light.position.set( -100, 500, 400 );
