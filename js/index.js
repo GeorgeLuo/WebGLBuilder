@@ -237,14 +237,12 @@ function createCircleGeometry(image_path) {
   circleImage = geometry;
   circle = new THREE.Mesh( geometry, material );
 
-
-  
   return circle;
 }
 
-function createPlaneImage() {
-  var planeGeometry = new THREE.PlaneGeometry(350, 350, 1, 1);
-  var texture = new THREE.TextureLoader().load( 'images/plate_trans.png' );
+function createPlaneImage(plane_img) {
+  var planeGeometry = new THREE.PlaneGeometry(425, 425, 1, 1);
+  var texture = new THREE.TextureLoader().load( plane_img );
   var planeMaterial = new THREE.MeshLambertMaterial( { map: texture, transparent: true } );
   //var planeMaterial = new THREE.MeshLambertMaterial({color: 0xffffff});
   var plane = new THREE.Mesh(planeGeometry, planeMaterial);
@@ -252,7 +250,7 @@ function createPlaneImage() {
   // rotate and position the plane
   // plane.rotation.x = -0.5 * Math.PI;
   // plane.rotation.z = -1.0 * Math.PI;
-  plane.position.set(0,0,0);
+  plane.position.set(0,0,-1);
   // add the plane to the scene
   planeImage = plane;
   return planeImage;
@@ -307,6 +305,8 @@ function createPlatesScene() {
   circles.add(createCircleGeometry("images/plate_trans.png"));
 
   loadObjects([circles]);
+
+  loadObjects([createPlaneImage('images/plate_bg.jpg')]);
 
   const light = new THREE.DirectionalLight( 0xffffff, 1);
   light.position.set( -100, 500, 400 );
